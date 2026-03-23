@@ -112,7 +112,7 @@ export default function LoginPage() {
         </form>
 
         <p className="login-footer">
-          This is a custom UI for RGIPT Academic ERP.{' '}
+          This is a custom UI designed by Lucky Singh for RGIPT Academic ERP.{' '}
           <a
             href="https://rgipterp.com/erp/login.php"
             target="_blank"
