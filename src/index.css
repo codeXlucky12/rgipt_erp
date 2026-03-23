@@ -74,7 +74,28 @@ input { font-family: var(--font); }
   flex: 1;
   overflow-y: auto;
   padding: 0;
+  display: flex;
+  flex-direction: column;
 }
+
+.app-footer {
+  margin-top: auto;
+  padding: 1rem 2.5rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  letter-spacing: 0.01em;
+}
+
+.app-footer__name {
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 
 /* ─── Sidebar ─────────────────────────────────────────── */
 .sidebar {

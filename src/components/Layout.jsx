@@ -20,6 +20,9 @@ export default function Layout() {
       <Sidebar darkMode={darkMode} onToggleDark={toggleDark} />
       <main className="main-content">
         <Outlet />
+        <footer className="app-footer">
+          © {new Date().getFullYear()} · Designed by <span className="app-footer__name">Lucky</span>
+        </footer>
       </main>
     </div>
   );
