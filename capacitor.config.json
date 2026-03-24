@@ -1,6 +1,6 @@
 {
   "appId": "com.rgipt.erp",
-  "appName": "RGIPT ERP",
+  "appName": "RGIPT nexus",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
