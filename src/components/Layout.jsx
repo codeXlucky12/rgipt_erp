@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import SessionExpiredBanner from './SessionExpiredBanner';
 
 export default function Layout() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -17,6 +18,7 @@ export default function Layout() {
 
   return (
     <div className={`app-shell${darkMode ? ' dark' : ''}`} data-theme={darkMode ? 'dark' : 'light'}>
+      <SessionExpiredBanner />
       <Sidebar darkMode={darkMode} onToggleDark={toggleDark} />
       <main className="main-content">
         <Outlet />
@@ -27,3 +29,4 @@ export default function Layout() {
     </div>
   );
 }
+

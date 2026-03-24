@@ -44,39 +44,78 @@ export function parseStudentInfo(html) {
 
 /**
  * Parse the profile page (my-profile.php) for detailed info.
- * Returns all table rows as key-value pairs, plus name/rollNo.
+ * The ERP renders fields as: <label>Field Name</label> + <input value="...">
+ * inside column div wrappers.
  */
 export function parseProfile(html) {
   if (isLoginPage(html)) return null;
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
-
   const { name, rollNo } = parseStudentInfo(html);
 
-  // Collect all table rows as key-value details
-  const details = [];
-  const rows = doc.querySelectorAll('table tr');
-  rows.forEach(row => {
-    const cells = row.querySelectorAll('td, th');
-    if (cells.length >= 2) {
-      const key = cells[0].textContent.trim();
-      const val = cells[1].textContent.trim();
-      if (key && val && key.length < 60) {
-        details.push({ key, value: val });
-      }
+  // Walk up from a label to find its associated input value
+  function getValNear(label) {
+    let el = label.parentElement;
+    for (let i = 0; i < 5; i++) {
+      if (!el) break;
+      const inp = el.querySelector(
+        'input[type="text"], input[type="email"], input[type="number"], textarea, select'
+      );
+      if (inp) return (inp.value || inp.textContent || '').trim();
+      el = el.parentElement;
     }
+    return '';
+  }
+
+  // Build a map of label text → value
+  const fields = {};
+  doc.querySelectorAll('label').forEach(lbl => {
+    const key = lbl.textContent.trim().replace(/\s+/g, ' ').replace(/[*:]+$/, '').trim();
+    if (!key || key.length > 100) return;
+    const val = getValNear(lbl);
+    if (val) fields[key] = val;
   });
 
-  // Try extracting specific fields
-  const semester = details.find(d => /sem(ester)?/i.test(d.key))?.value || '';
-  const programme = details.find(d => /prog(ram(me)?)?/i.test(d.key))?.value || '';
-  const branch = details.find(d => /branch|dept/i.test(d.key))?.value || '';
-  const batch = details.find(d => /batch/i.test(d.key))?.value || '';
-  const email = details.find(d => /email/i.test(d.key))?.value || '';
+  // Gender from checked radio
+  const genderRadio = doc.querySelector('input[type="radio"]:checked[value="Male"], input[type="radio"]:checked[value="Female"]');
+  if (genderRadio) fields['Gender'] = genderRadio.value;
 
-  return { name, rollNo, semester, programme, branch, batch, email, details };
+  // Category from checked radio
+  for (const cat of ['OBC(NCL)', 'GEN(EWS)', 'GEN', 'SC', 'ST']) {
+    if (doc.querySelector(`input[type="radio"][value="${cat}"]:checked`)) {
+      fields['Category'] = cat;
+      break;
+    }
+  }
+
+  // Helper: case-insensitive substring match over field keys
+  function pick(...substrings) {
+    for (const sub of substrings) {
+      const hit = Object.entries(fields).find(([k]) => k.toLowerCase().includes(sub.toLowerCase()));
+      if (hit && hit[1]) return hit[1];
+    }
+    return '';
+  }
+
+  return {
+    name: name || pick('name'),
+    rollNo,
+    email: pick('email address', 'email'),
+    phone: pick('personal contact', 'mobile', 'contact number'),
+    gender: fields['Gender'] || pick('gender'),
+    dob: pick('date of birth', 'birth', 'dob'),
+    blood: pick('blood'),
+    aadhar: pick('aadhaar', 'aadhar'),
+    father: pick("father"),
+    mother: pick("mother"),
+    parentPhone: pick("parents's contact", "parent contact"),
+    parentEmail: pick("parents's email", "parent email"),
+    category: fields['Category'] || pick('category'),
+    rawFields: fields,
+  };
 }
+
 
 /**
  * Parse rgipt_course.php for the list of enrolled courses.

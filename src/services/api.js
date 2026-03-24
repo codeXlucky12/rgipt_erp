@@ -37,6 +37,8 @@ export async function fetchErpPage(path) {
 
   if (response.status === 401) {
     clearToken();
+    // Notify the UI without forcing a redirect — the user must click Sign Out
+    window.dispatchEvent(new CustomEvent('erp:session-expired'));
     const data = await response.json().catch(() => ({}));
     throw new Error(data.error || 'Session expired. Please log in again.');
   }
