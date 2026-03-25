@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const fetch = require('node-fetch');
-const crypto = require('crypto');
+import express from 'express';
+import cors from 'cors';
+import fetch from 'node-fetch';
+import crypto from 'crypto';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -15,7 +15,6 @@ const allowedOrigins = [
 if (process.env.ALLOWED_ORIGIN) {
   allowedOrigins.push(process.env.ALLOWED_ORIGIN); // custom domain if any
 }
-
 
 const COMMON_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -202,20 +201,31 @@ app.get('/api/session', (req, res) => {
   res.json({ active: !!(sess && Object.keys(sess.erpCookieMap).length > 0) });
 });
 
-// ── Serve React frontend (production) ──────────────────────────────────────
-const path = require('path');
+// ── Serve React frontend (Railway & Local) ──────────────────────────────────
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Vercel serverless functions export the Express app
+export default app;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const distPath = path.join(__dirname, '../dist');
 
-app.use(express.static(distPath));
+// Only setup static serving if we aren't executing within Vercel
+if (!process.env.VERCEL) {
+  app.use(express.static(distPath));
 
-// All non-API routes → React's index.html (handles React Router)
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(distPath, 'index.html'));
-  }
-});
+  // All non-API routes → React's index.html (handles React Router)
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(distPath, 'index.html'));
+    }
+  });
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 ERP Proxy + Frontend running at http://localhost:${PORT}`);
-  console.log(`   ERP: ${ERP_BASE}\n`);
-});
+  // Listen for local/Railway deployment
+  app.listen(PORT, () => {
+    console.log(`\n🚀 ERP Proxy API running at port ${PORT}`);
+    console.log(`   ERP: ${ERP_BASE}\n`);
+  });
+}
