@@ -11,20 +11,23 @@ export default function AppUpdater() {
     if (!Capacitor.isNativePlatform()) return;
 
     const checkForUpdates = async () => {
+      let currentVersionCode = 1; // Default to 1 for older apps w/o the plugin
+
       try {
-        // Get current native app info
+        // Get current native app info. This WILL fail on your old APK
+        // because we just installed the @capacitor/app native plugin today!
         const appInfo = await App.getInfo();
-        
+        currentVersionCode = parseInt(appInfo.build, 10) || 1;
+      } catch (err) {
+        console.warn('Could not read native app version. Assuming version 1.', err);
+      }
+
+      try {
         // Fetch latest version info from Vercel deployment
-        // using a full URL so the webview correctly resolves it,
-        // or a relative URL since it's hosted from the same domain
         const res = await fetch('/version.json?t=' + new Date().getTime());
         if (!res.ok) return;
         
         const latestData = await res.json();
-        
-        // Compare versionCode (build number). You can also use semantic version string comparison.
-        const currentVersionCode = parseInt(appInfo.build, 10) || 0;
         const latestVersionCode = parseInt(latestData.versionCode, 10) || 0;
 
         if (latestVersionCode > currentVersionCode) {
